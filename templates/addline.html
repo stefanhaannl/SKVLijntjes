@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+        <h2>Add Line</h2>
+        {% from "_formhelpers.html" import render_form  %}
+        {{ render_form(form) }}
+
+{% endblock %}

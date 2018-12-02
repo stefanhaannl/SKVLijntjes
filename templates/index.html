@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+   {% from "_formhelpers.html" import render_messages %}
+   {{ render_messages("mes") }}
+   <h1>Hi, {{ current_user.name }}!</h1>
+{% endblock %}

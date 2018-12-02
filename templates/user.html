@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+   <h1>{{ user.name }}</h1>
+    <h2>Lijntjes</h2>
+    <ul>
+    {% for line in lines %}
+        <li>{{line}}</li>
+    {% endfor %}
+    </ul>
+    {% if user.id == current_user.id %}
+    <h2>Instellingen</h2>
+    {% endif %}
+{% endblock %}
