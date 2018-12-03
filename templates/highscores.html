@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+   <h1>Highscores</h1>
+   <ol>
+      {% for score in scores %}
+      <li>{{score['name']}}: {{score['count']}}</li>
+      {% endfor %}
+   </ol>
+{% endblock %}

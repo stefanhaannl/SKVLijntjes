@@ -9,15 +9,14 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
 
 
-class SignUpForm(FlaskForm):
-    email = StringField("Email", validators=[DataRequired(), Length(3, 64), Email()])
-    name = StringField("Name", validators=[DataRequired(), Length(3, 64)])
-    password = PasswordField("Password", validators=[DataRequired(), Length(6, 64), EqualTo('password2', message="Password fields do not match.")])
-    password2 = PasswordField("Repeat Password", validators=[DataRequired(), Length(6, 64)])
+class AddUserForm(FlaskForm):
+    club = SelectField("Vereniging", coerce=int, validators=[InputRequired()])
+    name = StringField("Naam", validators=[DataRequired(), Length(3, 64)])
+    email = StringField("Email")
 
 
 class AddLineForm(FlaskForm):
-    user1 = SelectField("User 1", coerce=int, validators=[InputRequired()])
-    user2 = SelectField("User 2", coerce=int, validators=[InputRequired()])
-    description = TextAreaField("Description")
+    user1 = SelectField("Wie", coerce=int, validators=[InputRequired()])
+    user2 = SelectField("Met wie", coerce=int, validators=[InputRequired()])
+    description = TextAreaField("Omschrijving")
 
