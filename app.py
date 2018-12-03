@@ -4,12 +4,14 @@ from forms import LoginForm, AddUserForm, AddLineForm
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import and_, or_
+import messages as msg
 
 init_db = False
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///SKVlijntjes.sqlite3'
 app.config['SECRET_KEY'] = "random stringwfds"
+masterpassword = 'skvlijntjes'
 
 db = SQLAlchemy(app)
 
@@ -44,7 +46,7 @@ if init_db:
     cl = Club(name='SKV Amsterdam')
     db.session.add(cl)
     db.session.commit()
-    db.session.add(User(name='Stefan Haan', email='stefanhaannl@gmail.com', password='5scZie', club=cl.id, status=3))
+    db.session.add(User(name='Stefan Haan', email='stefanhaannl@gmail.com', password='termacnofas', club=cl.id, status=3))
     db.session.commit()
 
 
@@ -70,29 +72,12 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None or user.password != form.password.data:
-            flash("Username or password incorrect.", "error")
+            flash(msg.Error.emailpassincorrect, "error")
             return redirect(url_for('login'))
         print('User login: {}'.format(user.name))
         login_user(user, remember=form.remember_me.data)
         return redirect(url_for('index'))
     return render_template('login.html', form=form)
-
-#
-# @app.route('/signup', methods=['GET', 'POST'])
-# def signup():
-#     form = SignUpForm()
-#     if form.validate_on_submit():
-#         if User.query.filter_by(email=form.email.data).first() is None:
-#             newuser = User(name=form.name.data, email=form.email.data, password=form.password.data, club='SKV Amsterdam')
-#             db.session.add(newuser)
-#             db.session.commit()
-#             print('User creation: {}'.format(newuser.name))
-#             login_user(newuser, remember=0)
-#             flash("User succesfully created", "mes")
-#             return redirect(url_for('index'))
-#         flash("E-mail already exists in the database.", "error")
-#         return redirect(url_for('signup'))
-#     return render_template('signup.html', form=form)
 
 
 @app.route('/logout')
@@ -111,16 +96,27 @@ def addline():
     form.user2.choices = users
     if form.validate_on_submit():
         if form.user1.data == form.user2.data:
-            flash("You cannot have a line with yourself.", "error")
+            flash(msg.Error.linewithself, "error")
             return redirect(url_for('addline'))
-        if Line.query.filter(or_(and_(Line.user1_id == form.user1.data, Line.user2_id == form.user2.data), and_(Line.user1_id == form.user1.data, Line.user2_id == form.user2.data))).first() is None:
-            newline = Line(description=form.description.data, user1_id=form.user1.data, user2_id=form.user2.data)
+        if Line.query.filter(or_(and_(Line.user1_id == form.user1.data, Line.user2_id == form.user2.data),
+                                 and_(Line.user1_id == form.user2.data, Line.user2_id == form.user1.data))).first() is None:
+            if current_user.status >= 2:
+                newline = Line(description=form.description.data,
+                               user1_id=form.user1.data,
+                               user2_id=form.user2.data,
+                               accepted=1)
+                flash(msg.Message.linecreated, "mes")
+            else:
+                newline = Line(description=form.description.data,
+                               user1_id=form.user1.data,
+                               user2_id=form.user2.data,
+                               accepted=0)
+                flash(msg.Message.linerequested, "mes")
             db.session.add(newline)
             db.session.commit()
-            flash("Line succesfully created", "mes")
             return redirect(url_for('index'))
         else:
-            flash("This line already exists.", "error")
+            flash(msg.Error.lineexists, "error")
             return redirect(url_for('addline'))
     return render_template('addline.html', form=form)
 
@@ -139,14 +135,10 @@ def user(id):
         lines.append([User.query.get(lst[0]).name, line.description])
     if current_user.id == int(id):
         if form_adduser.validate_on_submit():
-            newuser = User(name=form_adduser.name.data,
-                           email=form_adduser.email.data,
-                           password='skvlijntjes',
-                           club=form_adduser.club.data,
-                           status=0)
+            newuser = User(name=form_adduser.name.data, email=form_adduser.email.data, password=masterpassword, club=form_adduser.club.data, status=0)
             db.session.add(newuser)
             db.session.commit()
-            flash("User succesfully created", "mes")
+            flash(msg.Message.usercreated, "mes")
             return redirect(url_for('index'))
     return render_template('user.html', user=user, lines=lines, form_adduser=form_adduser)
 
