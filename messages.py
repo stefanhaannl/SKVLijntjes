@@ -1,7 +1,7 @@
 class Error(object):
     emailpassincorrect = 'Email of wachtwoord onjuist.'
     linewithself = 'Je kunt geen lijntje met jezelf hebben...'
-    lineexists = 'Dit lijntje bestaat al.'
+    lineexists = 'Dit lijntje bestaat al of is al aangevraagd.'
 
 
 class Message(object):

@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import and_, or_
 import messages as msg
 
-init_db = False
+init_db = True
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///SKVlijntjes.sqlite3'
@@ -87,6 +87,20 @@ def logout():
     return redirect(url_for('index'))
 
 
+@app.route('/line/<id>', methods=['GET', 'POST'])
+@login_required
+def line(id):
+    if request.method == 'POST':
+        Line.query.get(int(id)).accepted = 1
+        db.session.commit()
+        return redirect(url_for('.user', id=current_user.id))
+    line = Line.query.get(int(id))
+    lineinfo = {'id1': User.query.get(line.user1_id).name,
+                'id2': User.query.get(line.user2_id).name,
+                'description': line.description,
+                'confirm': line.accepted}
+    return render_template('line.html', line=lineinfo)
+
 @app.route('/addline', methods=['GET', 'POST'])
 @login_required
 def addline():
@@ -121,27 +135,46 @@ def addline():
     return render_template('addline.html', form=form)
 
 
-@app.route('/user/<id>', methods=['GET','POST'])
+@app.route('/user/<id>', methods=['GET'])
 @login_required
 def user(id):
+    # Adduserform
     form_adduser = AddUserForm()
     clubs = [(club.id, club.name) for club in Club.query.all()]
     form_adduser.club.choices = clubs
     user = User.query.get(id)
+    # Userlines
     lines = []
     for line in user.lines:
-        lst = [line.user1_id, line.user2_id]
-        lst.remove(int(id))
-        lines.append([User.query.get(lst[0]).name, line.description])
-    if current_user.id == int(id):
-        if form_adduser.validate_on_submit():
-            newuser = User(name=form_adduser.name.data, email=form_adduser.email.data, password=masterpassword, club=form_adduser.club.data, status=0)
-            db.session.add(newuser)
-            db.session.commit()
-            flash(msg.Message.usercreated, "mes")
-            return redirect(url_for('index'))
-    return render_template('user.html', user=user, lines=lines, form_adduser=form_adduser)
+        if line.accepted:
+            lst = [line.user1_id, line.user2_id]
+            lst.remove(int(id))
+            lines.append([User.query.get(lst[0]).name, line.description])
+    # Lines to be q'd
+    qlines = []
+    for qline in Line.query.filter(Line.accepted == 0):
+        qlines.append({
+            'id': qline.id,
+            'u1': User.query.get(qline.user1_id).name,
+            'u2': User.query.get(qline.user2_id).name,
+            'desc': qline.description
+        })
+    return render_template('user.html', user=user, lines=lines, form_adduser=form_adduser, qlines=qlines)
 
+
+@app.route('/adduser', methods=['POST'])
+@login_required
+def adduser():
+    form_adduser = AddUserForm()
+    clubs = [(club.id, club.name) for club in Club.query.all()]
+    form_adduser.club.choices = clubs
+    if form_adduser.validate_on_submit():
+        newuser = User(name=form_adduser.name.data, email=form_adduser.email.data, password=masterpassword,
+                       club=form_adduser.club.data, status=0)
+        db.session.add(newuser)
+        db.session.commit()
+        flash(msg.Message.usercreated, "mes")
+        return redirect(url_for('index'))
 
 @app.route('/highscores')
 @login_required
@@ -152,9 +185,10 @@ def highscores():
         output.append({
             'id': user.id,
             'name': user.name,
-            'count': Line.query.filter(or_(Line.user1_id == user.id, Line.user2_id == user.id)).count()
+            'count': Line.query.filter(and_(or_(Line.user1_id == user.id, Line.user2_id == user.id),
+                                            Line.accepted)).count()
             })
-    scores = sorted(output, key=lambda x: x['count'])
+    scores = sorted(output, key=lambda x: x['count'], reverse=True)
     return render_template('highscores.html', scores=scores)
 
 

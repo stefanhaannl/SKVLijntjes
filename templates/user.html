@@ -12,9 +12,32 @@
         <h2>Instellingen</h2>
         {% if user.status >= 2 %}
             <h2>Admin</h2>
+            <h3>Aangevraagde lijntjes</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Wie</th>
+                    <th scope="col">Met Wie</th>
+                    <th scope="col">Omschrijving</th>
+                    <th scope="col">Actie</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+                {% for qline in qlines %}
+                <tr>
+                    <td>{{ qline['id'] }}</td>
+                    <td>{{ qline['u1'] }}</td>
+                    <td>{{ qline['u2'] }}</td>
+                    <td>{{ qline['description'] }}</td>
+                    <td><form method="POST" action="/line/{{ qline['id'] }}"><button type="submit">Bevestigen</button></form></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
             <h3>Gebruiker toevoegen</h3>
             {% from "_formhelpers.html" import render_form  %}
-            {{ render_form(form_adduser) }}
+            {{ render_form(form_adduser,'/adduser') }}
         {% endif %}
     {% endif %}
 

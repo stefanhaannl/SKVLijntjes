@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+   <h1>Lijntje</h1>
+    <h2>{{ line['id1'] }} - {{ line['id2'] }}</h2>
+    <h3>{% if line['confirm'] == True %}Lijntje bevestigd door een admin. {% else %}Lijntje nog niet bevestigd door een admin. {% endif %} </h3>
+    <p>{{ line['descriptions'] }}</p>
+{% endblock %}
