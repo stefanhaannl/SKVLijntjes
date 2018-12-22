@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import and_, or_
 import messages as msg
 
-init_db = True
+init_db = False
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///SKVlijntjes.sqlite3'
@@ -43,10 +43,12 @@ class Line(db.Model):
 
 if init_db:
     db.create_all()
-    cl = Club(name='SKV Amsterdam')
-    db.session.add(cl)
-    db.session.commit()
-    db.session.add(User(name='Stefan Haan', email='stefanhaannl@gmail.com', password='termacnofas', club=cl.id, status=3))
+    clubs = ['SKV Amsterdam', 'Parabool','Vakgericht','Debalderin','Hebbes','Melmac',"Hippo's",'Attila','Paal Centraal','Erasmus','Skunk']
+    for club in clubs:
+        c = Club(name=club)
+        db.session.add(c)
+        db.session.commit()
+    db.session.add(User(name='Stefan Haan', email='stefanhaannl@gmail.com', password='termacnofas', club=1, status=3))
     db.session.commit()
 
 
@@ -191,5 +193,5 @@ def highscores():
     scores = sorted(output, key=lambda x: x['count'], reverse=True)
     return render_template('highscores.html', scores=scores)
 
-
+print([(club.id, club.name) for club in Club.query.all()])
 app.run(port=5000)
